@@ -1,0 +1,11 @@
+{
+	"name": "GoogleAnalytics4Delphi",
+	"description": "Delphi library to integration with Google Analytics.",
+	"version": "1.0.0",
+	"homepage": "",
+	"mainsrc": "./src",
+	"projects": [],
+	"dependencies": {
+		"https://github.com/viniciussanchez/restrequest4delphi": "^v4.0.12"
+	}
+}
