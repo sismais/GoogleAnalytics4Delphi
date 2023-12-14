@@ -27,7 +27,7 @@ For manual installation, you need to install these dependencies:
 
 See the project at [demo/DemoProject](/demo/DemoProject) to see how to configure and send.
 
-Sample codes:
+**Sample codes:
 
 ```delphi
 uses
@@ -135,6 +135,12 @@ begin
   Memo1.Lines.Text := LPayload.ToJson(True);
 end;
 ```
+
+**Tests in Postmand**
+
+You can use the Postman to validate and undertand the format of body GA4 Payload (Json):
+
+[<img src="https://run.pstmn.io/button.svg" alt="Run In Postman" style="width: 128px; height: 32px;">](https://app.getpostman.com/run-collection/3415784-465b3505-e6da-4fc8-9c69-735784f1583c?action=collection%2Ffork&source=rip_markdown&collection-url=entityId%3D3415784-465b3505-e6da-4fc8-9c69-735784f1583c%26entityType%3Dcollection%26workspaceId%3D5b0baa99-1535-4316-854d-321fecc6bb6f)
 
 # FAQ
 
