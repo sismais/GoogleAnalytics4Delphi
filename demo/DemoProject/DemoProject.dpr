@@ -7,7 +7,8 @@ uses
   Sismais.Analytics.Models in '..\..\src\Sismais.Analytics.Models.pas',
   Sismais.Analytics in '..\..\src\Sismais.Analytics.pas',
   Sismais.Analytics.Utils in '..\..\src\Sismais.Analytics.Utils.pas',
-  Sismais.Analytics.Models.Config in '..\..\src\Sismais.Analytics.Models.Config.pas';
+  Sismais.Analytics.Models.Config in '..\..\src\Sismais.Analytics.Models.Config.pas',
+  View.Cliente in 'src\View\View.Cliente.pas' {frmCliente};
 
 {$R *.res}
 

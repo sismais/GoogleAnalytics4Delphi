@@ -16,17 +16,19 @@ type
     btnInitGA4: TButton;
     MainMenu1: TMainMenu;
     este1: TMenuItem;
-    este21: TMenuItem;
+    mniCadastroCliente: TMenuItem;
     gbxCustomEvent: TGroupBox;
     btnTrackCustomEvent: TButton;
     CheckBox1: TCheckBox;
     Edit1: TEdit;
+    Label1: TLabel;
     procedure btnPageViewClick(Sender: TObject);
     procedure btnGenerateJsonClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure btnDemoTrackClickClick(Sender: TObject);
     procedure btnTrackCustomEventClick(Sender: TObject);
     procedure btnInitGA4Click(Sender: TObject);
+    procedure mniCadastroClienteClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -39,6 +41,8 @@ var
 implementation
 
 {$R *.dfm}
+
+uses View.Cliente;
 
 procedure TfrmMain.btnPageViewClick(Sender: TObject);
 begin
@@ -53,7 +57,7 @@ var
   LPayload: IGA4Payload;
 begin
   {Observations:
-  - Custom events have several rules. If not respected, envents not registered.
+  - Custom events have several rules. If not respected, events not registered.
     Please read links before create custom events.
 
   Links:
@@ -99,6 +103,12 @@ begin
     //On payload, you can send 1..25 events. Any event can have 0..25 individual params.
     .Events.AddNewEvent('my_custom_event_name2')
     ;
+
+  {Note: Before sending the event, the private method "TAnalytics.BeforePost(APayload)"
+  is called to insert some required/recommended user properties and event parameters.
+  If necessary, you can create a new class inherited from TAnalytics and override the
+  BeforePost method to edit the payload, inserting or modifying the added event parameters
+  and user properties.}
   TAnalytics.Instance.SendCustomEvents(Self.ClassName, Self.Caption, LPayload);
 
   Memo1.Lines.Text := LPayload.ToJson(True);
@@ -107,6 +117,19 @@ end;
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
   btnInitGA4Click(Sender);
+end;
+
+procedure TfrmMain.mniCadastroClienteClick(Sender: TObject);
+var
+  LViewCliente: TfrmCliente;
+begin
+  LViewCliente := TfrmCliente.Create(Self);
+  try
+    TAnalytics.Instance.SendPageView(LViewCliente.ClassName, LViewCliente.Caption);
+    LViewCliente.ShowModal;
+  finally
+    LViewCliente.Release;
+  end;
 end;
 
 function UNIXTimeInMilliseconds: Int64;
@@ -168,9 +191,9 @@ var
 begin
   { Read more about settings in method XML Doc. }
 
-  //Use to identifi app users. See XML Doc for more info.
+  //Use to identify app users. See XML Doc for more info.
   LUserId := '83114586-0fb0-4a60-b6ed-5d90462b4539';
-  //Optional. Use it to identifier an user company (Needs customize GA4 reports.)
+  //Optional. Use it to identify an user company (Needs customize GA4 reports.)
   LCompanyId := 'A6A63A91-1F21-4AC3-BF2F-3049EC61B1D0';
   LDeviceId := Sismais.Analytics.GetDeviceID(APP_NAME);
 

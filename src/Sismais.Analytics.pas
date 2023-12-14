@@ -95,7 +95,11 @@ type
       ///  - https://developers.google.com/analytics/devguides/collection/protocol/ga4/sending-events
       /// </summary>
       function SendCustomEvents(const AFormClassName_PageLocation, AFormTitle: String;
-        APayload: IGA4Payload): IGA4Payload;
+        APayload: IGA4Payload): IGA4Payload; overload;
+      /// <summary>
+      ///   Send custom event without form/screen information.
+      /// </summary>
+      function SendCustomEvents(APayload: IGA4Payload): IGA4Payload; overload;
 
       /// <summary>
       ///   Get a new payload instance interface. Use it to mount custom events.
@@ -150,8 +154,8 @@ function TAnalytics.SendCustomEvents(const AFormClassName_PageLocation, AFormTit
 var
   I: Integer;
 begin
-//  if APayload.Events.Count <= 0 then
-//    raise EAnalyticsError.Create('Payload Events could not empty. Please insert 1(one) or more event.');
+  if APayload.Events.Count <= 0 then
+    raise EAnalyticsError.Create('Payload Events could not empty. Please insert 1(one) or more event.');
 
   for I := 0 to Pred(APayload.Events.Count) do
   begin
@@ -170,6 +174,19 @@ begin
   InternalSendEvent(APayload);
   Result := APayload;
 end;
+
+function TAnalytics.SendCustomEvents(APayload: IGA4Payload): IGA4Payload;
+var
+  I: Integer;
+begin
+  if APayload.Events.Count <= 0 then
+    raise EAnalyticsError.Create('Payload Events could not empty. Please insert 1(one) or more event.');
+
+  //Return Payload if needs to debug.
+  InternalSendEvent(APayload);
+  Result := APayload;
+end;
+
 
 class destructor TAnalytics.Finish;
 begin

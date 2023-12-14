@@ -16,6 +16,14 @@ object frmMain: TfrmMain
     858
     559)
   TextHeight = 15
+  object Label1: TLabel
+    Left = 17
+    Top = 428
+    Width = 185
+    Height = 30
+    Caption = 'Test forms PageView in MainMenu navigation.'
+    WordWrap = True
+  end
   object btnDemoTrackClick: TButton
     Left = 17
     Top = 197
@@ -101,12 +109,13 @@ object frmMain: TfrmMain
     end
   end
   object MainMenu1: TMainMenu
-    Left = 199
-    Top = 29
+    Left = 144
+    Top = 10
     object este1: TMenuItem
-      Caption = 'Teste'
-      object este21: TMenuItem
-        Caption = 'Teste2'
+      Caption = 'Cadastros'
+      object mniCadastroCliente: TMenuItem
+        Caption = 'Clientes'
+        OnClick = mniCadastroClienteClick
       end
     end
   end

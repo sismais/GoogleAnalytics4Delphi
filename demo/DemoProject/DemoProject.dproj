@@ -112,6 +112,10 @@
         <DCCReference Include="..\..\src\Sismais.Analytics.pas"/>
         <DCCReference Include="..\..\src\Sismais.Analytics.Utils.pas"/>
         <DCCReference Include="..\..\src\Sismais.Analytics.Models.Config.pas"/>
+        <DCCReference Include="src\View\View.Cliente.pas">
+            <Form>frmCliente</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
