@@ -224,7 +224,7 @@ begin
   LEvent
       .Params
         .Add('control_name', Copy(AElementClassName, 1, 100))
-        .Add('control_class', Copy(AElementCaption, 1, 100))
+        .Add('control_caption', Copy(AElementCaption, 1, 100))
         //tamamho maximo para valor de page_title: 300.
         .Add('page_title', Copy(Trim(AFormTitle), 1, 300))
         //Tamanho maximo para valor de page_location: 1000
