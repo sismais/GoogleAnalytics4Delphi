@@ -1,4 +1,4 @@
-# GoogleAnalytics4Delphi
+﻿# GoogleAnalytics4Delphi
 
 Library to abstract integration with Google Analytics for use in Delphi Applications.
 
@@ -43,9 +43,15 @@ uses
 
 ...
 
-procedure ConfigAnalytics;
+var
+  GlobalAnalytics: TAnalytics = nil;
+
+...
+
+procedure InitialConfigAnalytics;
 const
-  APP_NAME = 'AppName';
+  //If you have many applications integrating an unique ERP, set here the main ERP name.
+  MAIN_APP_NAME = 'GestaoMaisSimples';
   MEASUREMENT_ID = 'G-**********';
   API_SECRET = 'Your Api Secret Key';
 var
@@ -57,19 +63,36 @@ begin
   LUserId := '83114586-0fb0-4a60-b6ed-5d90462b4539';
   //Optional. Use it to identify an user company (Needs customize GA4 reports.)
   LCompanyId := 'A6A63A91-1F21-4AC3-BF2F-3049EC61B1D0';
-  LDeviceId := Sismais.Analytics.GetDeviceID(APP_NAME);
-
-  TAnalytics.Instance
+  LDeviceId := Sismais.Analytics.GetDeviceID(MAIN_APP_NAME);
+  GlobalAnalytics := TAnalytics.Create;
+  GlobalAnalytics
     .Config
+      {Optional. If not informed, is used the application executable name (without extension).
+      This information is send to GA in all events as param "app_name".}
+      //.AppName('OptionalAppName')
       .MeasurementId(MEASUREMENT_ID)
       .ApiSecret(API_SECRET)
       .ClientID(LDeviceId)
+      //Optional. Leave blank on start application. Set after user logon and/or set company tier.
       .CompanyID(LCompanyID)
-      //Opcional. Deixe em branco enquanto o usuário não fizer login. Preencha após o usuário efetuar o login.
+      //Optional. Leave blank if user not logger. Set after user login.
       .UserID(LUserId)
       .DebugEndPoint(False);
 end;
 
+initialization
+  InitialConfigAnalytics;
+
+finalization
+  if Assigned(GlobalAnalytics) then
+    FreeAndNil(GlobalAnalytics)
+
+```
+
+**Send single event withou params:**
+
+```delphi
+  GlobalAnalytics.SendEvent('user_login');
 ```
 
 **Send PageView**
@@ -77,11 +100,7 @@ end;
 ```delphi
 procedure TfrmMain.btnPageViewClick(Sender: TObject);
 begin
-  Memo1.Lines.Text := TAnalytics.Instance.SendPageView(Self.ClassName, Self.Caption).ToJson(True);
-  {In this sample i capture result Json in a TMemo to debug. In production, you can use with no return.
-    Eg.:
-    TAnalytics.Instance.SendPageView(Self.ClassName, Self.Caption);
-  }
+  GlobalAnalytics.SendPageView(Self.ClassName, Self.Caption);
 end;
 ```
 
@@ -90,17 +109,17 @@ end;
 ```
 procedure TfrmMain.btnDemoTrackClickClick(Sender: TObject);
 begin
-  TAnalytics.Instance.SendClick(
+  GlobalAnalytics.SendClick(
     Self.ClassName,
     Self.Caption,
-    GetSenderNameOrClassName(Sender, 'DefaultName'),
+    GetSenderNameAndClassName(Sender, 'DefaultName'),
     GetSenderCaption(Sender, 'DefaultCaption'));
 end;
 ```
 
 **Send custom events**
 
-Note: Before sending the event, the private method "TAnalytics.BeforePost(APayload)" is called to insert some required/recommended user properties and event parameters. If necessary, you can create a new class inherited from TAnalytics and override the BeforePost method to edit the payload, inserting or modifying the added event parameters and user properties.
+Note: Before sending the event, the private method "TAnalytics.BeforeSend(APayload)" is called to insert some required/recommended user properties and event parameters. If necessary, you can create a new class inherited from TAnalytics and override the BeforeSend method to edit the payload, inserting or modifying the added event parameters and user properties.
 
 ```delphi
 procedure TfrmMain.btnTrackCustomEventClick(Sender: TObject);
@@ -133,18 +152,43 @@ begin
     .Events.AddNewEvent('my_custom_event_name2')
     ;
 
-  {Note: Before sending the event, the private method "TAnalytics.BeforePost(APayload)" 
+  {Note: Before sending the event, the private method "TAnalytics.BeforeSend(APayload)" 
   is called to insert some required/recommended user properties and event parameters. 
   If necessary, you can create a new class inherited from TAnalytics and override the 
-  BeforePost method to edit the payload, inserting or modifying the added event parameters 
+  BeforeSend method to edit the payload, inserting or modifying the added event parameters 
   and user properties.}  
-  TAnalytics.Instance.SendCustomEvents(Self.ClassName, Self.Caption, LPayload);
+  GlobalAnalytics.SendEvents(Self.ClassName, Self.Caption, LPayload);
 
   Memo1.Lines.Text := LPayload.ToJson(True);
 end;
 ```
 
-**Tests in Postmand**
+### How to auto track all forms and control clicks
+
+By Maicon Saraiva:
+You can use DDetours Delphi library to Hook methods and intercepts all form shows and controls click without edit any actual file.
+See the library to understand the possibilities:
+https://github.com/MahdiSafsafi/DDetours
+
+If you need save time, contact-me to get an built-in unit ("plug and play") to start track with only 1 (one) line of code.
+
+Note: Payed services, with a small fee.
+(To make it running automatic and stable with DDetours i'm work for ~30 hours.
+Save this time for an fraction of costs)
+
+Contacte-me at:
+
+Instagram: maiconsaraiva
+LinkedIn: maiconsaraiva
+Facebook: maiconsaraiva
+
+or in our site
+
+https://sismais.com
+
+Thank you!
+
+### Tests in Postman
 
 You can use the Postman to validate and undertand the format of body GA4 Payload (Json):
 

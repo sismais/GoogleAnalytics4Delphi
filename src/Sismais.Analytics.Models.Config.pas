@@ -7,6 +7,12 @@ type
   IAnalyticsConfig = interface
     ['{7C922304-C7F1-4B3E-930F-7E1C3686126E}']
     /// <summary>
+    ///   Optional. Application name. Eg.: The executable name without ".exe"
+    ///   If not informed, is used the executable name whitout extension (".exe").
+    /// </summary>
+    function AppName(Value: String): IAnalyticsConfig; overload;
+    function AppName: String; overload;
+    /// <summary>
     ///  Get it at Google Analytic platform: <para />
     ///  At GA4 propertie: Administrator > Data flow > [Choose or Create Your Flow] >
     ///    In DataFlow header coluns search "Measurement ID" }
@@ -69,6 +75,7 @@ type
 
   TAnalitycsConfig = class(TInterfacedObject, IAnalyticsConfig)
     private
+      FAppName: String;
       FAPISecret: String;
       FClientId: String; //Device ID.
       FCompanyId: String;
@@ -80,6 +87,8 @@ type
       constructor Create;
       destructor Destroy; override;
       class function New : IAnalyticsConfig;
+      function AppName(Value: String): IAnalyticsConfig; overload;
+      function AppName: String; overload;
       function APISecret(Value: String): IAnalyticsConfig; overload;
       function APISecret: String; overload;
       function ClientId(Value: String): IAnalyticsConfig; overload;
@@ -103,6 +112,17 @@ implementation
 function TAnalitycsConfig.APISecret: String;
 begin
   Result := FAPISecret;
+end;
+
+function TAnalitycsConfig.AppName: String;
+begin
+  Result := FAppName;
+end;
+
+function TAnalitycsConfig.AppName(Value: String): IAnalyticsConfig;
+begin
+  FAppName := Value;
+  Result := Self;
 end;
 
 function TAnalitycsConfig.APISecret(Value: String): IAnalyticsConfig;
@@ -141,6 +161,7 @@ begin
   FClientId := '';
   FCompanyId := '';
   FSessionID := '';
+  FAppName := '';
   FDebugEndPoint := False;
 end;
 

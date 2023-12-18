@@ -3,7 +3,7 @@ unit Sismais.Analytics.Utils;
 interface
 
 uses
-  Winapi.Windows, System.JSON, System.RTTI, System.SysUtils, Vcl.Forms, System.Classes,
+  Winapi.Windows, System.JSON, System.RTTI, System.SysUtils, Vcl.Forms, Vcl.Controls, System.Classes,
   System.IOUtils, System.IniFiles, System.StrUtils, System.DateUtils,
   System.Win.Registry;
 
@@ -28,13 +28,22 @@ uses
   function GetNewSessionID: Int64;
 
   /// <summary>
-  ///   Get value of propertie "Name" of object. Is propertie or is empty, then try get ClassName, else return Default.
+  ///   Use RTTI to get value of propertie "Name" of object passed. If propertie is empty or can't access or value is
+  /// empty string, then return "ADefault".
+  /// Pass "ADefault" as empty string if don't have a default.
   /// </summary>
-  function GetSenderNameOrClassName(Sender: TObject; ADefault: String): String;
+  function GetObjectName(const Sender: TObject; ADefault: String): String;
   /// <summary>
-  ///   Get value of propertie "Caption" of object. Is propertie not exists or except, return Default.
+  ///   Use RTTI t get value of propertie "Caption" of object. Is propertie not exists or except, return Default.
   /// </summary>
-  function GetSenderCaption(Sender: TObject; ADefault: String): String;
+  function GetObjectCaption(Sender: TObject; ADefault: String): String;
+
+  /// <summary>
+  ///   Get object idenfication in this order:
+  /// 1. If have an name, get: TObjectClassName(ObjectInstanceName);
+  /// 2. If don't have name, get: TObjectParentClassName(ParentInstanceName).TObjectClassName.'Object Caption';
+  /// </summary>
+  function GetObjectIndentify(const AObject: TObject; ADefault: String): String;
 
 
 
@@ -47,7 +56,7 @@ type
     /// <summary>
     ///   Find if propertie exists and get it's value. If properti not exists ou can't access, return TValue.From(nil);
     /// </summary>
-    class function FindPropertyValue(AObject: TObject; const APropertyName: String): TValue; static;
+    class function FindPropertyValue(const AObject: TObject; const APropertyName: String): TValue; static;
     class function GetPropertyValue(AObject: TObject; const APropertyName: String): TValue; static;
   end;
 
@@ -169,7 +178,7 @@ begin
   Result := DateTimeToUnix(Now, False) * 1000; // Data e hora atuais em milissegundos;
 end;
 
-function GetSenderNameOrClassName(Sender: TObject; ADefault: String): String;
+function GetObjectName(const Sender: TObject; ADefault: String): String;
 var
   LValue: TValue;
 begin
@@ -178,7 +187,7 @@ begin
     begin
       Result := TComponent(Sender).Name;
       if Trim(Result).IsEmpty then
-        Result := Sender.ClassName;
+        Result := Trim(ADefault);
     end
     else
     begin
@@ -195,7 +204,7 @@ begin
   end;
 end;
 
-function GetSenderCaption(Sender: TObject; ADefault: String): String;
+function GetObjectCaption(Sender: TObject; ADefault: String): String;
 var
   LValue: TValue;
 begin
@@ -214,10 +223,51 @@ begin
   end;
 end;
 
+function GetObjectIndentify(const AObject: TObject; ADefault: String): String;
+var
+  LValue: TValue;
+  LParent: TWinControl;
+  LOwner: TComponent;
+begin
+  try
+    Result := '';
+    LValue := TAnalyticsRttiUtils.FindPropertyValue(AObject, 'Name');
+    if ((not LValue.IsEmpty) and (Trim(LValue.AsString) <> '')) then
+      Result := Format('%s(%s)', [AObject.ClassName, LValue.AsString])
+    else
+    begin
+      //O motivo de obter a classe e nome do objeto pai é que se o objeto não tiver um nome que o torne único,
+      //não teremos como diferencia-lo de outra forma.
+      if AObject is TControl then
+      begin
+        LParent := TControl(AObject).Parent;
+        if LParent <> nil then
+          if Trim(LParent.Name) <> '' then
+            //TObjectParentClassName(ParentInstanceName).TObjectClassName.'Object Caption';
+            Result := Format('%s(%s).%s:%s',
+              [LParent.ClassName, LParent.Name, AObject.ClassName, GetObjectCaption(AObject, '')]);
+      end
+      else
+      if AObject is TComponent then
+        if TComponent(AObject).Owner <> nil then
+        begin
+          LOwner := TComponent(AObject);
+          Result := Format('%s(%s).%s:%s',
+            [LOwner.ClassName, LOwner.Name, AObject.ClassName, GetObjectCaption(AObject, '')]);
+        end;
+    end;
+
+    if Trim(Result).IsEmpty then
+      Result := AObject.ClassName + '.' + Trim(ADefault);
+  except
+    Result := Trim(ADefault);
+  end;
+end;
+
 
 { TAnalyticsRttiUtils }
 
-class function TAnalyticsRttiUtils.FindPropertyValue(AObject: TObject; const APropertyName: String): TValue;
+class function TAnalyticsRttiUtils.FindPropertyValue(const AObject: TObject; const APropertyName: String): TValue;
 var
   eContext  : TRttiContext;
   eProperty : TRttiProperty;

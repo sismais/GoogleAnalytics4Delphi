@@ -22,13 +22,15 @@ type
     CheckBox1: TCheckBox;
     Edit1: TEdit;
     Label1: TLabel;
+    btnTestSingleEvent: TButton;
+    Label2: TLabel;
     procedure btnPageViewClick(Sender: TObject);
     procedure btnGenerateJsonClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
     procedure btnDemoTrackClickClick(Sender: TObject);
     procedure btnTrackCustomEventClick(Sender: TObject);
-    procedure btnInitGA4Click(Sender: TObject);
     procedure mniCadastroClienteClick(Sender: TObject);
+    procedure btnTestSingleEventClick(Sender: TObject);
+    procedure Label2Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -37,6 +39,7 @@ type
 
 var
   frmMain: TfrmMain;
+  GlobalAnalytics: TAnalytics = nil;
 
 implementation
 
@@ -46,10 +49,16 @@ uses View.Cliente;
 
 procedure TfrmMain.btnPageViewClick(Sender: TObject);
 begin
-  Memo1.Lines.Text := TAnalytics.Instance.SendPageView(Self.ClassName, Self.Caption).ToJson(True);
-  {In production, you can use with no return. Eg.:
-    TAnalytics.Instance.SendPageView(Self.ClassName, Self.Caption);
+  Memo1.Lines.Text := GlobalAnalytics.SendPageView(Self.ClassName, Self.Caption).ToJson(True);
+  {In production, you can use without return. Eg.:
+    GlobalAnalytics.SendPageView(Self.ClassName, Self.Caption);
   }
+end;
+
+procedure TfrmMain.btnTestSingleEventClick(Sender: TObject);
+begin
+  //Send a single event to Analytics.
+  GlobalAnalytics.SendEvent('user_login');
 end;
 
 procedure TfrmMain.btnTrackCustomEventClick(Sender: TObject);
@@ -104,19 +113,44 @@ begin
     .Events.AddNewEvent('my_custom_event_name2')
     ;
 
-  {Note: Before sending the event, the private method "TAnalytics.BeforePost(APayload)"
+  {Note: Before sending the event, the private method "TAnalytics.BeforeSend(APayload)"
   is called to insert some required/recommended user properties and event parameters.
   If necessary, you can create a new class inherited from TAnalytics and override the
-  BeforePost method to edit the payload, inserting or modifying the added event parameters
+  BeforeSend method to edit the payload, inserting or modifying the added event parameters
   and user properties.}
-  TAnalytics.Instance.SendCustomEvents(Self.ClassName, Self.Caption, LPayload);
+  GlobalAnalytics.SendEvents(Self.ClassName, Self.Caption, LPayload);
 
   Memo1.Lines.Text := LPayload.ToJson(True);
 end;
 
-procedure TfrmMain.FormCreate(Sender: TObject);
+procedure TfrmMain.Label2Click(Sender: TObject);
 begin
-  btnInitGA4Click(Sender);
+{
+  By Maicon Saraiva:
+  You can use DDetours Delphi library to Hook methods and intercepts all form shows
+  and controls click without edit any actual file.
+  See the library to understand the possibilities:
+  https://github.com/MahdiSafsafi/DDetours
+
+  If you need save time, contact-me to get an built-in unit ("plug and play") to:
+  start track with only 1 (one) code line.
+
+  Obs: Service payed: Only $100.
+  (To make it running automatic and stable with DDetours i'm work for ~30 hours.
+  Save this time for an fraction of costs)
+
+  Contacte-me at:
+
+  Instagram: maiconsaraiva
+  LinkedIn: maiconsaraiva
+  Facebook: maiconsaraiva
+
+  or in our
+
+  https://sismais.com
+
+  Thank you!
+}
 end;
 
 procedure TfrmMain.mniCadastroClienteClick(Sender: TObject);
@@ -125,7 +159,7 @@ var
 begin
   LViewCliente := TfrmCliente.Create(Self);
   try
-    TAnalytics.Instance.SendPageView(LViewCliente.ClassName, LViewCliente.Caption);
+    GlobalAnalytics.SendPageView(LViewCliente.ClassName, LViewCliente.Caption);
     LViewCliente.ShowModal;
   finally
     LViewCliente.Release;
@@ -140,17 +174,17 @@ end;
 procedure TfrmMain.btnDemoTrackClickClick(Sender: TObject);
 begin
   {$IFDEF DEBUG}
-  Memo1.Lines.Text := TAnalytics.Instance.SendClick(
+  Memo1.Lines.Text := GlobalAnalytics.SendClick(
     Self.ClassName,
     Self.Caption,
-    GetSenderNameOrClassName(Sender, 'DefaultName'),
-    GetSenderCaption(Sender, 'DefaultCaption')).ToJson(True);
+    GetObjectIndentify(Sender, 'DefaultName'),
+    GetObjectCaption(Sender, 'DefaultCaption')).ToJson(True);
   {$ELSE}
-  TAnalytics.Instance.SendClick(
+  GlobalAnalytics.SendClick(
     Self.ClassName,
     Self.Caption,
-    GetSenderNameOrClassName(Sender, 'DefaultName'),
-    GetSenderCaption(Sender, 'DefaultCaption'));
+    GetObjectIndentify(Sender, 'DefaultName'),
+    GetObjectCaption(Sender, 'DefaultCaption'));
   {$ENDIF}
 end;
 
@@ -181,9 +215,10 @@ begin
   Memo1.Text := LPayload.ToJson(True {Format Json});
 end;
 
-procedure TfrmMain.btnInitGA4Click(Sender: TObject);
+procedure InitialConfigAnalytics;
 const
-  APP_NAME = 'GestaoMaisSimples';
+  //If you have many applications integrating an unique ERP, set here the main ERP name.
+  MAIN_APP_NAME = 'GestaoMaisSimples';
   MEASUREMENT_ID = 'G-**********';
   API_SECRET = 'Your Api Secret Key';
 var
@@ -195,17 +230,29 @@ begin
   LUserId := '83114586-0fb0-4a60-b6ed-5d90462b4539';
   //Optional. Use it to identify an user company (Needs customize GA4 reports.)
   LCompanyId := 'A6A63A91-1F21-4AC3-BF2F-3049EC61B1D0';
-  LDeviceId := Sismais.Analytics.GetDeviceID(APP_NAME);
-
-  TAnalytics.Instance
+  LDeviceId := Sismais.Analytics.GetDeviceID(MAIN_APP_NAME);
+  GlobalAnalytics := TAnalytics.Create;
+  GlobalAnalytics
     .Config
+      {Optional. If not informed, is used the application executable name (without extension).
+      This information is send to GA in all events as param "app_name".}
+      //.AppName('OptionalAppName')
       .MeasurementId(MEASUREMENT_ID)
       .ApiSecret(API_SECRET)
       .ClientID(LDeviceId)
+      //Optional. Leave blank on start application. Set after user logon and/or set company tier.
       .CompanyID(LCompanyID)
-      //Opcional. Deixe em branco enquanto o usuário não fizer login. Preencha após o usuário efetuar o login.
+      //Optional. Leave blank if user not logger. Set after user login.
       .UserID(LUserId)
       .DebugEndPoint(False);
 end;
+
+initialization
+  InitialConfigAnalytics;
+
+finalization
+  if Assigned(GlobalAnalytics) then
+    FreeAndNil(GlobalAnalytics)
+
 
 end.

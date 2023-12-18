@@ -88,6 +88,9 @@ type
     function GetCount: Integer;
     function GetItem(const Index: Integer): TGA4Event;
   public
+    /// <summary>
+    ///   Add a new event and it's name. IMPORTANT: Event name must have max of 40 characters.
+    /// </summary>
     function AddNewEvent(AEventName: String): TGA4Event;
     property Count: Integer read GetCount;
     property Items[const Index: Integer]: TGA4Event read GetItem;
@@ -429,7 +432,9 @@ begin
   //https://developers.google.com/analytics/devguides/collection/protocol/ga4/sending-events?hl=pt-br&client_type=gtag#limitations
   if FList.Count >= 25 then
     raise EAnalyticsError.Create('In free version, only 25 events per request are allowed.');
-  Result := TGA4Event.Create(Self.FOwner, AEventName);
+  Result := TGA4Event.Create(Self.FOwner,
+    Copy(AEventName, 1, 40) //Politica do Google Analytics, evento só pode ter 40 caracteres.
+    );
   FList.Add(Result);
 end;
 
@@ -569,7 +574,7 @@ begin
   - 25 user properties;
   - 24 characters for user propertie name;
   - 36 character for user propertie values;
-  Source: //https://support.google.com/analytics/answer/9267744?hl=pt-BR
+  Source: https://support.google.com/analytics/answer/9267744?hl=pt-BR
   }
   if FList.Count >= 25 then
     raise EAnalyticsError.Create('In the free version of Google Analytics, only 25 User Properties are allowed.' + SLineBreak +

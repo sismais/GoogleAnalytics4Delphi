@@ -11,18 +11,32 @@ object frmMain: TfrmMain
   Font.Name = 'Segoe UI'
   Font.Style = []
   Menu = MainMenu1
-  OnCreate = FormCreate
   DesignSize = (
     858
     559)
   TextHeight = 15
   object Label1: TLabel
     Left = 17
-    Top = 428
+    Top = 452
     Width = 185
     Height = 30
     Caption = 'Test forms PageView in MainMenu navigation.'
     WordWrap = True
+  end
+  object Label2: TLabel
+    Left = 17
+    Top = 503
+    Width = 170
+    Height = 30
+    Caption = 'How to auto track all forms and clicks?'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = 16744448
+    Font.Height = -12
+    Font.Name = 'Segoe UI'
+    Font.Style = [fsUnderline]
+    ParentFont = False
+    WordWrap = True
+    OnClick = Label2Click
   end
   object btnDemoTrackClick: TButton
     Left = 17
@@ -71,7 +85,6 @@ object frmMain: TfrmMain
     Height = 29
     Caption = 'Initialization'
     TabOrder = 4
-    OnClick = btnInitGA4Click
   end
   object gbxCustomEvent: TGroupBox
     Left = 17
@@ -107,6 +120,15 @@ object frmMain: TfrmMain
       TabOrder = 2
       Text = 'Edit1'
     end
+  end
+  object btnTestSingleEvent: TButton
+    Left = 17
+    Top = 411
+    Width = 185
+    Height = 25
+    Caption = 'Send single event'
+    TabOrder = 6
+    OnClick = btnTestSingleEventClick
   end
   object MainMenu1: TMainMenu
     Left = 144
